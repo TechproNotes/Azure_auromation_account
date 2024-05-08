@@ -1,0 +1,1 @@
+Virtual Machine Name: "ppaloweu1"): compute.VirtualMachinesClient#CreateOrUpdate: Failure sending request: StatusCode=400 -- Original Error: Code="InvalidParameter" Message="The value 'Windows' of parameter 'osDisk.osType' is not allowed. Allowed values are: Linux." Target="osDisk.osType"[0m
