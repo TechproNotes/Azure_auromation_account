@@ -1,0 +1,32 @@
+Option 1: Granular Control with Azure Automation (https://learn.microsoft.com/en-us/azure/automation/overview)
+This approach offers more flexibility and customization but requires some scripting knowledge. Here's the workflow:
+1.	Azure Automation: Establish an Azure Automation account to run scripts or pre-built runbooks for patching Windows and Linux VMs.
+	Alternative Script Execution (Optional): consider Azure Logic Apps or Azure Functions. 
+2.	Azure Policy: Define policies to enforce patching compliance and ensure VMs meet our organization's security standards.
+3.	Azure DevOps (Optional): Integrate Azure DevOps pipelines to trigger VM deployment from AMIs or snapshots after patching is complete.
+   Sample workflow: 
+1.	When a new VM is provisioned, an event triggers an Azure Automation runbook.
+2.	The runbook checks the OS type (Windows or Linux) of the VM.
+3.	For Windows VMs, the runbook executes a PowerShell script to install Windows updates.
+4.	For Linux VMs, the runbook executes a shell script to update packages using the appropriate package manager (e.g., apt for Ubuntu, yum for CentOS).
+5.	After patching is complete, the runbook marks the VM as compliant using Azure Policy.
+
+Benefits of Option 1:
+•	Granular control over the patching process
+•	Customization to fit specific needs.
+Considerations:
+•	Requires personnel with good automation skills, including Azure DevOps knowledge.
+Option 2: Straightforward Approach with Automatic VM Guest Patching (https://learn.microsoft.com/en-us/azure/virtual-machines/automatic-vm-guest-patching)
+This built-in Azure service offers a simpler solution:
+•	Automatic VM Guest Patching: Leverages Azure to automatically download and install security updates for supported Windows and Linux VMs.
+Benefits of Option 2:
+•	Easier to implement and manage.
+•	Faster to set up, allowing for a Proof-of-Concept (POC) to demonstrate immediate results.
+Recommendation:
+Starting with Automatic VM Guest Patching (Option 2) provides a quick win and strengthens security. As the team gains experience with Azure automation, we can transition to Option 1 for more granular control in the future.
+Next Steps:
+•	Let's discuss the best approach based on our team's comfort level and automation experience.
+•	We can proceed with a POC for Automatic VM Guest Patching to showcase its effectiveness.
+
+Please note, pathing is ongoing activity so usage of Azure Bicep or any IaC is not so beneficial, IaC is useful for repetitive options like creating cloud resources etc. 
+ 
