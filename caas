@@ -1,0 +1,179 @@
+3.7	Container Management Services (CaaS)
+Service Provider is responsible for the design, implementation and operations of Container management platforms, containers and respective interfaces (e.g. to CU DevOps, CI/CD), col-lectively named container management Services (“CaaS” or “Container-as-a-Service”). 
+The Services of Service Provider are based on Microsoft Azure (Azure Kubernetes Services, Az-ure DevOps) in the Microsoft public cloud (Azure) and Docker. Naming conventions described elements of the CaaS-platform and -Service may vary, depending on the vendor of the CaaS-software. 
+The term “container management” refers to the orchestration (e.g. create, destruct, deploy, operate and scale) of software containers operated within the container management plat-form(s).
+Therefore, Service Provider shall perform all relevant activities regarding the provision, imple-mentation and operation of such CaaS-Platform and -Services, unless they are defined as co-operation commitments of Customer or responsibilities within the sphere of Customer. In specif-ic, Service Provider plans, installs, operates, monitors and provides lifecycle management for the container platform(s), containers and relevant interfaces (e.g. to DevOps CI/CD) for Cus-tomer based on the requirements set by Customer.
+Container management platform consist of the following core components: 
+ 
+Figure 3: Overview CaaS-platform
+Core elements of the CaaS-Service are:
+(1)	The Container management platform consists of one or multiple clusters and all other components required and shared by such clusters (e.g. persistent storage, registry, rout-ing/communications, security, monitoring and other services). It represents the neces-sary environment, required to provision and operate container management Services and containers.
+(2)	Clusters consists of at least one cluster master and multiple nodes. These master and nodes provide the cluster/container orchestration for containers. Within a cluster, the cluster master orchestrates, runs and manages all Resources within a cluster and the communication of such Resources within and outside the CaaS-platform (e.g. CI/CD, au-tomation). 
+(3)	Nodes are physical or virtual servers to host pods. Each node contains the services nec-essary to run pods and is managed by the master components. 
+(4)	Pods are groups of one or more containers, with shared storage/network, and a specifi-cation for how to run the containers. A Pod’s contents are always co-located and co-scheduled, and run in a shared context. A Pod models an application-specific “logical host” - it contains one or more application containers which are relatively tightly cou-pled.
+(5)	Containers are a software design concept which isolates software processes that share an operating system (OS) and bind application- or microservices libraries and -dependencies into one deployable unit (the “container”) by the use of a technology called “OS-level virtualization” (single OS-kernel is used for multiple Container instanc-es). Containers are used to create cloud-native, distributed applications and/or to pack-age legacy applications for increased portability and deployment simplicity.
+An image is a file, comprised of multiple layers, used to execute code in a container. An image is essentially built from the instructions for a complete and executable version of an application, which relies on the host OS kernel.
+Service Provider’s responsibility under for CaaS include in general, but not limited to, the fol-lowing:
+•	Architecture, design, planning, implementation and operations of CaaS-platform and -Services according to CU application development-, application-, security- and other re-quirements;
+•	Architecture, design, planning, implementation and operations of integration of the platform into CU Private- and Public Cloud environment (e.g. Automation, compute, storage, network) as well as into the CU software development environment (e.g. DevOps CI/CD toolset). The responsibility for the DevOps CI/CD toolset remains with Customer.
+•	Creation, operation and maintenance of a CaaS operations framework defining opera-tional standards (e.g. blueprint/templates, operation policies, runbooks, SOPs, tags) to standardize and automate operations within the CaaS-platform;
+•	Architecture, design, planning, implementation and operations of Service provision-ing/automation facilities (“infrastructure-as-a- code”) for standardized operational tasks (e.g. provisioning, management of platform components, deployment of applica-tions);
+•	Operations, logical management and administration of the CaaS-platform and -Services;
+•	Optimization and automation of operational tasks
+•	Service management and reporting according to the SOW SMG; 
+•	Support of Customer in the development of appropriate processes, methodologies in ap-plication development for the transformation/containerization of legacy applications and limited to matters related to the CaaS-platform; and 
+•	Support of Customer in the use of the CaaS-platform as well as the deployment and op-erations of containerized application (e.g. container configurations).
+In doing so, the Service Provider considers the following architectural specifications of the Cus-tomer:
+•	Contractually agreed CaaS services will be built and operated on the basis of Azure Ku-bernetes Services and the Azure DevOps tool stack, with AzureRepo as the central re-pository for all deployments, as well as Docker; 
+•	TerraForm from HashiCorp is used for DevOps automation (CI/CD);
+•	The Azure Container Registry is used as the internal container registry. An external reg-istry is not used; 
+•	User management is done entirely through the Azure AD;
+•	Isolation of the CaaS environment from other system environments in the CU's public cloud (private AKS);
+•	In parallel to the clusters operated by the Service provider, the Customer may set up further, fully isolated clusters (e.g. development, test) for which the Service Provider has no obligation to perform other than, if necessary, to integrate such clusters into the higher-level CaaS platform;
+For Container Management Services, the following allocation of responsibilities is agreed:
+3.7.1	Planning 
+Tasks and responsibilities	SP	CU
+Container management strategy and requirements (e.g. container management base prod-uct(s) and options, security requirement, DevOps-interfaces and -guidelines, development- and operations guidelines) 	C	R
+Architecture and design of CaaS-platform, as well as underlying technical infrastructure, in-line with CU container management strategy and -requirements (e.g. security policies, architecture guidelines, DevOps environment)	R	C
+Planning, technical specification and sizing of CaaS-platform (e.g. nodes per cluster, pods per node, pods per vCore, pod types and Resource requirements), according to agreed design	R	C
+Planning, technical specification and sizing of CaaS-platform shared- and persistent stor-age/volumes and required file/storage services (e.g. NFS, Gluster/CEPH)	R	C
+Planning, technical specification and sizing of underlying technical infrastructure (e.g. storage, network, compute, HA/DR) for CaaS-Services 	R	C
+Planning and technical specification and sizing of CaaS-platform integration/interfaces between CaaS-Platforms in Public- and Private Cloud; according to agreed design	R	C
+Planning, technical specification and sizing of CaaS-platform integration/interfaces to CU environments (e.g. to DevOps CI/CD, infrastructure provisioning/automation, self-service, APIs, AD/LDAP, SSO), according to agreed design	R	C
+Planning, technical specification and sizing CaaS-Services and integration of Services into SP Service Management (e.g. monitoring, incident management, reporting)	R	C
+Definition of CaaS operations framework and automation for CaaS (e.g. runbooks, SOPs, templates/blueprints, automation, operation policies, labels, selectors) to provide Services and support agreed CU business- and technical processes (e.g. e automated provisioning, deployment and operations of containerized applications, containers and CaaS-platform)	R	C
+Planning of multiple domains (FQDN – fully qualified domain name) within the CaaS platform for logical segregation of workloads from different CU business units	R	C
+Definition of garbage collection policy (e.g. disk space, eviction thresholds)
+R	C
+Support the CU with best-practices in definition of application architecture for CU applica-tions to optimally use and utilize SP CaaS-platform	R	
+Support of CU concerning the integration of CU toolset (e.g. CI/CD, provision-ing/automation) to CaaS-platform	R	
+Support of CU concerning development languages and used tools/frameworks, as required and potentially at separate costs	R	
+Creation of a checklist for the validation of the readiness of application for on-barding (containerized operation) to ensure stable/secure operations of the application/ CaaS-platform	R	
+Support of CU in application assessment, migration planning and or testing, as required and potentially at separate costs	R	
+Validation of completeness and correctness of CU Service- or Change Request for CaaS-platform, interfaces and containers	R	
+3.7.2	Provision
+Tasks and responsibilities	SP	CU
+Provision of software and software components required for CaaS-platform and -Services, unless stated otherwise in Annex B (Provision of Software Licenses & Subscriptions by the Parties) 
+R	
+Provision of CaaS-platform and -Services, as well as underlying technical infrastructure, according to agreed design 	R	
+Provision of CaaS-platform integration/interfaces between CaaS-Platforms in Public- and Private Cloud; according to agreed design	R	
+Provision of CaaS-platform integration/interfaces to CU environments; according to agreed design	R	
+Provision of integration of Services into SP Service Management, according to agreed design
+R	
+Provision of CaaS operations framework and provisioning/automation for Services, accord-ing to agreed design	R	
+Provision of shared- and persistent storage/volumes and required file/storage services (e.g. NFS, Gluster/CEPH) for CaaS-Services	R	C
+Provision of backup and recovery Services for CaaS-Services; according so Service- and CU requirements	R	
+3.7.3	Setup/Installation
+Tasks and responsibilities	SP	CU
+Setup/Installation and configuration of CaaS-platform as well as underlying technical infra-structure	R	C
+Setup/Implementation of CaaS-platform integration/interfaces between CaaS-Platforms in Public- and Private Cloud as well as other CU environments; according to agreed design	R	C
+Setup/Implementation and configuration of all interfaces/Integration CU environments
+R	C
+Setup/Implementation of integration of Services into SP Service Management
+R	C
+Setup/Implementation of CaaS operations framework and provisioning/automation for Ser-vices	R	C
+Setup/Implementation of the Service catalogue for CaaS Services
+R	C
+Setup/Implementation of shared and persistent storage/volumes for CaaS-platform
+R	C
+3.7.4	Operations
+Tasks and responsibilities	SP	CU
+General operations
+Operation of CaaS-platform and -Resources according to the agreed CaaS operations framework and CU requirement	R	
+Operation of CaaS-platform integration/interfaces between CaaS-Platforms in Public- and Private Cloud; if available	R	
+Operation of all interfaces/Integration between CaaS-Platform and CU environments (CaaS-Platform-side)	R	
+Operation of all interfaces/Integration between CaaS-Platform and CU environments (CU-environment-side)		R
+Support of CU operations of all interfaces/Integration (CU-environment-side); where such support is required for CU to fulfill the contract	R	
+Support of SP operations of all interfaces/Integration (CaaS-Platform-side); where such support is required for SP to fulfill the contract		R
+Operation of all interfaces/Integration between CaaS-Platform SP Service Management
+R	
+Planning and execution of CU-initiated changes of the interfaces between CaaS-platform and CU-DevOps Environment (e.g. interface change caused by DevOps toolset change); according to the change management process and potential additional costs 	R	C
+Operation/management of the CaaS operations framework for Services
+R	
+Operation/adjustments of the CaaS operations framework and provisioning/automation environment for Services, including automation environment (e.g. tools, runbooks, tem-plates and blueprints) according to CU/application requirements	R	C
+Operation of the Service catalogue for CaaS Services 
+R	
+Adjustments/changes of the Service catalogue for CaaS Services 
+R	C
+CaaS-platform workload management, such as e.g.:
+•	Assignment of pods to specific nodes in a cluster
+•	Add/change/delete clusters and/or nodes
+•	Allocation of node resources
+•	Garbage collection (e.g. container, image) 
+•	Additional CaaS-platform operation tasks	R	C
+Labeling of nodes 
+R	C
+Selection of nodes 
+I	R
+Support of SP in the implementation of adjustment/changes; support in troubleshoot-ing/incident management only where required		R
+Operation/management of projects (e.g. create/change/delete projects/namespaces, management of members, project/namespace quotas, range limits)	C	R
+Operation of shared and persistent storage/volumes for CaaS-platform and NFS shares (e.g. create, change, remove Gluster/CEPH volumes)	R	
+Operation/management of virtual network/routing within CaaS-platform, including the entire technology stack (e.g. routers, firewalls)  	R	
+Operation/management of virtual network/routing within CaaS-platform (e.g. routes, ser-vice, pod)  		R
+Deployment of pods, which includes one or multiple containers
+C	R
+Availability management, monitoring, reporting and documentation of pods
+R	
+Operation of CaaS-platform internal image registry
+R	
+Logical management of CaaS-platform internal image registry (e.g. image management, including management of base images)		R
+Operations and logical management of CaaS-platform external image registry, if available 
+	R
+Integration of SP CaaS-platform with CU external image registry, if such external image registry is available	R	C
+Troubleshooting/incident management for issues related to container images/source code
+C	R
+Operations of code repository (e.g. Gitlab, Github, Bitbucket)
+	R
+Container images build and deploy, including image security/vulnerability scanning and 
+-testing	C	R
+Frequent clean-up of old/obsolete CaaS-platform objects (e.g. obsolete images, tags, pro-jects) 	I	R
+On-boarding of new applications
+Definition and management of container images (e.g. provenance, source-to-image, image customizing)		R
+Validation readiness of application for on-barding (containerized operation) according to agreed criteria/checklist to ensure stable/secure operations of the application/ CaaS-platform		R
+Support in non-functional testing of deployed applications related CaaS-platform (e.g. performance/scaling issues), as necessary	R	
+Functional testing and user acceptance testing of deployed application, including roll-back procedures		R
+3.7.5	Monitoring
+Tasks and responsibilities	SP	CU
+Monitoring of CaaS-platform, including all relevant components (e.g. Clusters, nodes, pods,
+containers) and CaaS-Services; notification of CU on anomalous behavior of such compo-nents (e.g. sudden increase in resource consumption, exceeding of thresholds, crashes, security violations) according to agreed process	R	I
+Monitoring of all interfaces/integration from/to CU environments (e.g. DevOps- and provi-sioning/automation environment, self-service, APIs) and Public Cloud container manage-ment platforms (if available)	R	I
+Monitoring of provisioning/automation within CaaS-platform (e.g. deployments, configura-tion changes); notification of CU on failures and errors according to agreed process	R	I
+Monitoring of specific CaaS-platform events (e.g. frequent container crashes, scheduling problems, node availability, CPU and memory quotas, failed probes, image pull errors, out of memory errors)	R	C
+3.7.6	User- and Access Management
+Tasks and responsibilities	SP	CU
+Provision of roles-based access management (RBAC) for CaaS-platform and -Resources; including an automated interface for CU to manage users/groups for namespaces; according to CU-requirements and in-line with CU security policies	R	C
+Provision and Setup/Installation and Operation of user/group access management for CaaS-platform and -Resources 	R	
+Definition and configuration/setup users and user groups for controlled and monitored access to CaaS-platform and -Resources; according to CU security and -requirements 	R	C
+Operation of users and user group administration for CaaS-platform and -Resources (e.g. create modify, delete, administration of access rights, lockout-management) according to CU security and -requirements 	R	C
+Provision and Setup/installation of elevated access privileges (e.g. admin access) to CU administrators to CaaS-platform and -Resources; only according to agreed process (e.g. for CU application management)	R	C
+Monitoring and Logging of all access to CaaS-platform and -Resources 
+R	
+Provisioning of agreed logs (e.g. application logs) to CU
+R	I
+Provision, setup and operations of technical/service accounts (e.g. used by CU DevOps systems)	R	C
+3.7.7	Backup & Restore
+Tasks and responsibilities	SP	CU
+Backup and restore of all configurations, logs and data of CaaS-platform (e.g. platform configurations etc., project meta data), as required for the provision of contracted Ser-vices 	R	
+Backup of system log files, archive logs and required data (e.g. Services, databases) within CaaS-platform; in accordance with relevant security-, data protection policies and as agreed in Backup Master Plan and Backup Plan	R	
+Backup and recovery for persistent data
+R	
+3.7.8	Reporting
+Tasks and responsibilities	SP	CU
+Frequent reporting of agreed SLAs and KPIs of CaaS-platform and -Resources; in accordance with SOW SMG	R	I
+Frequent reporting of CaaS-platform and -Resources utilization and other technical key indicators (e.g. capacity/utilization of nodes), based on CaaS-platform native tools/reporting facilities	R	I
+Immediate notification and later reporting on observation of anomalies (e.g. abnormal use) CaaS-platform and -Resources, in specific if agreed thresholds are exceeded or security relevant events	R	I
+3.7.9	Patches & Updates
+Tasks and responsibilities	SP	CU
+Maintain CaaS-platform, interfaces/integration to Public Cloud CaaS-platform and CU envi-ronments at a stable and supportable maintenance level and version according to Services as well as CU application and -security requirements	R	C
+Implementation of minor software updates of CaaS-platform & integration/interfaces within the sphere of responsibility of SP and upon approval by CU; major updates potentially ad additional costs 	R	C
+3.7.10	Performance & Tuning
+Tasks and responsibilities	SP	CU
+Continuously analyze utilization and trend/forecasts and proactively develop recommenda-tions regarding tuning and optimization of CaaS-platform and -Services (e.g., upgrades, downgrades, enhancements, and reconfiguration) for optimal performance and utilization	R	
+Implementation of tuning and optimization measures for CaaS-platform, interfac-es/integration to Public Cloud CaaS-platform and CU environments, upon approval of meas-ure(s) by CU	R	C
+3.7.11	Security 
+Tasks and responsibilities	SP	CU
+Definition, provision and configuration/setup of security management framework (e.g. secrets management, access control, authorization & authentication, SSC/security context constraints) for CaaS-platform and -Resources; according to CU requirements and in-line with CU security policies	R	C
+Operation of security management framework; according to CU requirements and in-line with CU security policies	R	
+Certificate management for CaaS-platform and -Resources according to the SOW EPC
+R	C
+Security monitoring of CaaS-platform and -Resources, based on CaaS-vendor native tools, including the provision of all security-relevant logs to CU	R	I
