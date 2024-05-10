@@ -1,0 +1,450 @@
+[11:08 AM] Nivetha R-EXTERNAL
+terraform {
+  required_providers {
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "=2.47.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=3.95.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.6.0"
+    }
+  }
+  backend "azurerm" {}
+}
+ 
+provider "azurerm" {
+  features {}
+}
+provider "azurerm" {
+  alias                      = "private_dns_sub"
+  subscription_id            = "24fd010d-9a67-4e56-9d89-a4979ae7057f"
+  skip_provider_registration = true
+  features {}
+}
+provider "azurerm" {
+  alias                      = "evd"
+  subscription_id            = "b4ba22c9-98c2-4ac0-bcbe-ef298e6ada99"
+  skip_provider_registration = true
+  features {}
+}
+ 
+provider "azurerm" {
+  alias                      = "enit_keyvault"
+  subscription_id            = var.enit_keyvault_subscription_id
+  skip_provider_registration = true
+  features {}
+}
+ 
+data "azurerm_resource_group" "app_rg" {
+  name = var.application_configuration.resource_group_name
+}
+ 
+ 
+data "azurerm_virtual_network" "azfileshare_net" {
+  name                = "prd-shared-weu-vnet"
+  resource_group_name = "prd-sharednetwork-weu-rg"
+}
+ 
+data "azurerm_subnet" "azfileshare_snet" {
+  name                 = "prd-shared-weu-vnet-azfileshare-snet"
+  virtual_network_name = "prd-shared-weu-vnet"
+  resource_group_name  = "prd-sharednetwork-weu-rg"
+}
+ 
+# Loadbalancer
+resource "azurerm_lb" "this" {
+  name                = "prd-azfileshare-weu-lb"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  sku = "Standard"
+ 
+  frontend_ip_configuration {
+    name                          = "InternalIpAddress"
+    subnet_id                     = data.azurerm_subnet.azfileshare_snet.id
+    private_ip_address_version    = "IPv4"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.253.98.6"
+  }
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_lb_backend_address_pool" "this" {
+  name = "dfsn-lb-pool"
+ 
+  loadbalancer_id = azurerm_lb.this.id
+}
+ 
+resource "azurerm_lb_backend_address_pool_address" "pdfsnweu1" {
+  name = "pdfsnweu1"
+ 
+  backend_address_pool_id = azurerm_lb_backend_address_pool.this.id
+  ip_address              = "10.253.98.4"
+  virtual_network_id      = data.azurerm_virtual_network.azfileshare_net.id
+}
+ 
+resource "azurerm_lb_backend_address_pool_address" "pdfsnweu2" {
+  name = "pdfsnweu2"
+ 
+  backend_address_pool_id = azurerm_lb_backend_address_pool.this.id
+  ip_address              = "10.253.98.5"
+  virtual_network_id      = data.azurerm_virtual_network.azfileshare_net.id
+}
+ 
+resource "azurerm_lb_probe" "this" {
+  name            = "dfsn-probe"
+  loadbalancer_id = azurerm_lb.this.id
+ 
+  port                = 4445
+  protocol            = "Tcp"
+  interval_in_seconds = 5
+  number_of_probes    = 2
+}
+ 
+resource "azurerm_lb_rule" "this" {
+  name                           = "pdfsnweu"
+  loadbalancer_id                = azurerm_lb.this.id
+  protocol                       = "All"
+  frontend_ip_configuration_name = azurerm_lb.this.frontend_ip_configuration[0].name
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.this.id]
+  probe_id                       = azurerm_lb_probe.this.id
+  frontend_port                  = 0
+  backend_port                   = 0
+}
+ 
+# Managed Disks
+resource "azurerm_managed_disk" "quorum_disk" {
+  name                = "prd-weu-pdfsnweu-quorum-disk"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  storage_account_type = "StandardSSD_LRS"
+  disk_size_gb         = 8
+  max_shares           = 2
+  create_option        = "Empty"
+  zone                 = 3
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_managed_disk" "dfs_namespace_disk" {
+  name                = "prd-weu-pdfsnweu-dfs-data-disk"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  storage_account_type = "StandardSSD_LRS"
+  disk_size_gb         = 8
+  max_shares           = 2
+  create_option        = "Empty"
+  zone                 = 3
+ 
+  tags = var.application_configuration.tags
+}
+ 
+# pdfsnweu1
+resource "random_password" "pdfsnweu1_admin_user" {
+  length  = 12
+  special = false
+}
+ 
+resource "random_password" "pdfsnweu1_admin_password" {
+  length           = 32
+  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
+  override_special = "!?@#$%&*"
+}
+ 
+resource "azurerm_network_interface" "pdfsnweu1" {
+  name                = "pdfsnweu1-nic"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  ip_configuration {
+    name      = "pdfsnweu1-nic-ipconfig"
+    subnet_id = data.azurerm_subnet.azfileshare_snet.id
+ 
+    private_ip_address_version    = "IPv4"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.253.98.4"
+  }
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_windows_virtual_machine" "pdfsnweu1" {
+  name                = "pdfsnweu1"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  admin_username = random_password.pdfsnweu1_admin_user.result
+  admin_password = random_password.pdfsnweu1_admin_password.result
+ 
+  network_interface_ids = [azurerm_network_interface.pdfsnweu1.id]
+  size                  = "Standard_D4_v5"
+  zone                  = 3
+ 
+  os_disk {
+    name                 = "pdfsnweu1-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "StandardSSD_LRS"
+  }
+ 
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+ 
+  tags = merge(var.application_configuration.tags, { vm-backup-policy = "vm-daily-2000-7d-4w", vm-update-schedule = "2-thursday-0200" })
+}
+ 
+resource "azurerm_virtual_machine_data_disk_attachment" "pdfsnweu1_dfs_namespace_disk" {
+  managed_disk_id    = azurerm_managed_disk.dfs_namespace_disk.id
+  virtual_machine_id = azurerm_windows_virtual_machine.pdfsnweu1.id
+  lun                = "11"
+  caching            = "None"
+}
+ 
+resource "azurerm_virtual_machine_data_disk_attachment" "pdfsnweu1_quorum_disk" {
+  managed_disk_id    = azurerm_managed_disk.quorum_disk.id
+  virtual_machine_id = azurerm_windows_virtual_machine.pdfsnweu1.id
+  lun                = "10"
+  caching            = "None"
+}
+ 
+# pdfsnweu2
+resource "random_password" "pdfsnweu2_admin_user" {
+  length  = 12
+  special = false
+}
+ 
+resource "random_password" "pdfsnweu2_admin_password" {
+  length           = 32
+  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
+  override_special = "!?@#$%&*"
+}
+ 
+ 
+resource "azurerm_network_interface" "pdfsnweu2" {
+  name                = "pdfsnweu2-nic"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  ip_configuration {
+    name      = "pdfsnweu2-nic-ipconfig"
+    subnet_id = data.azurerm_subnet.azfileshare_snet.id
+ 
+    private_ip_address_version    = "IPv4"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.253.98.5"
+  }
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_windows_virtual_machine" "pdfsnweu2" {
+  name                = "pdfsnweu2"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  admin_username = random_password.pdfsnweu2_admin_user.result
+  admin_password = random_password.pdfsnweu2_admin_password.result
+ 
+  network_interface_ids = [azurerm_network_interface.pdfsnweu2.id]
+  size                  = "Standard_D4_v5"
+  zone                  = 3
+ 
+  os_disk {
+    name                 = "pdfsnweu2-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "StandardSSD_LRS"
+  }
+ 
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+ 
+  tags = merge(var.application_configuration.tags, { vm-backup-policy = "vm-daily-2000-7d-4w", vm-update-schedule = "2-thursday-0200" })
+}
+ 
+resource "azurerm_virtual_machine_data_disk_attachment" "pdfsnweu2_dfs_namespace_disk" {
+  managed_disk_id    = azurerm_managed_disk.dfs_namespace_disk.id
+  virtual_machine_id = azurerm_windows_virtual_machine.pdfsnweu2.id
+  lun                = "11"
+  caching            = "None"
+}
+ 
+resource "azurerm_virtual_machine_data_disk_attachment" "pdfsnweu2_quorum_disk" {
+  managed_disk_id    = azurerm_managed_disk.quorum_disk.id
+  virtual_machine_id = azurerm_windows_virtual_machine.pdfsnweu2.id
+  lun                = "10"
+  caching            = "None"
+}
+ 
+resource "azurerm_backup_policy_file_share" "this" {
+  for_each            = var.azurerm_backup_policy_file_share_configuration
+  name                = each.key
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+  recovery_vault_name = var.recovery_vault_name
+ 
+  timezone = lookup(each.value, "timezone", null)
+ 
+  backup {
+    frequency = each.value.backup_frequency
+    time      = each.value.backup_time
+  }
+ 
+  dynamic "retention_daily" {
+    for_each = lookup(each.value, "retention_daily", [])
+    content {
+      count = retention_daily.value.count
+    }
+  }
+ 
+  dynamic "retention_weekly" {
+    for_each = lookup(each.value, "retention_weekly", [])
+    content {
+      count    = retention_weekly.value.count
+      weekdays = retention_weekly.value.weekdays
+    }
+  }
+ 
+  dynamic "retention_monthly" {
+    for_each = lookup(each.value, "retention_monthly", [])
+    content {
+      count    = retention_monthly.value.count
+      weekdays = retention_monthly.value.weekdays
+      weeks    = retention_monthly.value.weeks
+    }
+  }
+ 
+  dynamic "retention_yearly" {
+    for_each = lookup(each.value, "retention_yearly", [])
+    content {
+      count    = retention_yearly.value.count
+      weekdays = retention_yearly.value.weekdays
+      weeks    = retention_yearly.value.weeks
+      months   = retention_yearly.value.months
+    }
+  }
+}
+ 
+module "storage-account" {
+  source = ".\\storage-account-module"
+  providers = {
+    azurerm.main = azurerm
+    azurerm.dns  = azurerm.private_dns_sub
+  }
+  for_each = var.azurerm_storage_account_configuration
+ 
+  storage_account_name                  = each.key
+  resource_group                        = data.azurerm_resource_group.app_rg
+  subnet_id                             = data.azurerm_subnet.azfileshare_snet.id
+  azurerm_storage_account_configuration = each.value
+  application_configuration             = var.application_configuration
+  file_share_backup_policy_collection   = azurerm_backup_policy_file_share.this
+  recovery_vault_name                   = var.recovery_vault_name
+  default_backup_policies               = var.default_backup_policies
+}
+ 
+data "azurerm_subnet" "scansyncweu" {
+  name                 = "prd-shared-weu-vnet-azfileshare-snet"
+  virtual_network_name = "prd-shared-weu-vnet"
+  resource_group_name  = "prd-sharednetwork-weu-rg"
+}
+ 
+resource "random_password" "scansyncweu_admin_user" {
+  length  = 12
+  special = false
+}
+ 
+resource "random_password" "scansyncweu_admin_password" {
+  length           = 32
+  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
+  override_special = "!?@#$%&*"
+}
+ 
+resource "azurerm_network_interface" "pscansyncweu1" {
+  name                = "pscansyncweu1-nic"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  ip_configuration {
+    name      = "pscansyncweu1-nic-ipconfig"
+    subnet_id = data.azurerm_subnet.scansyncweu.id
+ 
+    private_ip_address_version    = "IPv4"
+    private_ip_address_allocation = "Dynamic"
+  }
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_windows_virtual_machine" "pscansyncweu1" {
+  name                = "pscansyncweu1"
+  location            = data.azurerm_resource_group.app_rg.location
+  resource_group_name = data.azurerm_resource_group.app_rg.name
+ 
+  admin_username = random_password.scansyncweu_admin_user.result
+  admin_password = random_password.scansyncweu_admin_password.result
+ 
+  network_interface_ids = [azurerm_network_interface.pscansyncweu1.id]
+  size                  = "Standard_D8s_v3"
+  zone                  = 1
+ 
+  os_disk {
+    name                 = "pscansyncweu1-osdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "StandardSSD_LRS"
+    disk_size_gb         = 128
+  }
+ 
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+ 
+  tags = merge(var.application_configuration.tags, { vm-backup-policy = "vm-daily-2000-7d-4w", vm-update-schedule = "2-thursday-0200" })
+}
+ 
+resource "azurerm_managed_disk" "pscansyncweu1data1" {
+  name                 = format("%s-%s", azurerm_windows_virtual_machine.pscansyncweu1.name, "data1-md")
+  location             = azurerm_windows_virtual_machine.pscansyncweu1.location
+  resource_group_name  = data.azurerm_resource_group.app_rg.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 500
+  zone                 = 1
+ 
+  tags = var.application_configuration.tags
+}
+ 
+resource "azurerm_virtual_machine_data_disk_attachment" "pscansyncweu1_data1" {
+  managed_disk_id    = azurerm_managed_disk.pscansyncweu1data1.id
+  virtual_machine_id = azurerm_windows_virtual_machine.pscansyncweu1.id
+  lun                = "10"
+  caching            = "ReadWrite"
+}
